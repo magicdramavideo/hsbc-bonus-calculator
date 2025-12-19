@@ -29,3 +29,6 @@
 - [x] 測試資料儲存與讀取功能
 - [ ] 測試使用者流程完整性
 - [ ] 優化輸入體驗（數字鍵盤、格式化）
+
+## Bug 修複
+- [x] 修複 useLinkPreviewContext 錯誤（需要在 LinkPreviewContextProvider 內部使用）

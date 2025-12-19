@@ -1,12 +1,15 @@
-import { Link } from "expo-router";
-import { StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
+import { Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 export default function ModalScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const tintColor = useThemeColor({}, "tint");
 
   return (
     <ThemedView
@@ -22,9 +25,11 @@ export default function ModalScreen() {
       ]}
     >
       <ThemedText type="title">This is a modal</ThemedText>
-      <Link href="/" dismissTo style={styles.link}>
-        <ThemedText type="link">Go to home screen</ThemedText>
-      </Link>
+      <Pressable onPress={() => router.back()} style={styles.link}>
+        <ThemedText type="link" style={{ color: tintColor }}>
+          Go to home screen
+        </ThemedText>
+      </Pressable>
     </ThemedView>
   );
 }
