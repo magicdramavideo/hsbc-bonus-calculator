@@ -75,17 +75,19 @@ export function calculateFinancialRates(
   targets: CalculationTargets
 ): Partial<AchievementRates> {
   const totalIncome = metrics.investmentIncome + metrics.insuranceIncome;
+  const nnmRate = calculateRate(metrics.nnm, targets.nnmTarget);
+  const wealthPenetrationRate = calculateRate(
+    metrics.wealthPenetration,
+    targets.wealthPenetrationTarget
+  );
 
   return {
     investmentRate: calculateRate(metrics.investmentIncome, targets.investmentTarget),
     insuranceRate: calculateRate(metrics.insuranceIncome, targets.insuranceTarget),
     totalIncomeRate: calculateRate(totalIncome, targets.totalIncomeTarget),
     caRate: calculateRate(metrics.ca, targets.caTarget),
-    nnmRate: calculateRate(metrics.nnm, targets.nnmTarget),
-    wealthPenetrationRate: calculateRate(
-      metrics.wealthPenetration,
-      targets.wealthPenetrationTarget
-    ),
+    nnmRate: Math.min(nnmRate, 200),
+    wealthPenetrationRate: Math.min(wealthPenetrationRate, 200),
   };
 }
 
@@ -95,12 +97,18 @@ export function calculateFinancialRates(
 export function calculateNonFinancialRates(
   metrics: NonFinancialMetrics
 ): Partial<AchievementRates> {
+  const riskRate = metrics.risk === 0 ? 100.0 : 0.0;
+  const qualityRate = metrics.quality === 0 ? 100.0 : 0.0;
+  const complaintRate = metrics.complaint === 0 ? 100.0 : 0.0;
+  const clientAppointmentRate = calculateRate(metrics.clientAppointment, 3);
+  const npsRate = calculateRate(metrics.nps, 100);
+
   return {
-    riskRate: metrics.risk === 0 ? 100.0 : 0.0,
-    qualityRate: metrics.quality === 0 ? 100.0 : 0.0,
-    complaintRate: metrics.complaint === 0 ? 100.0 : 0.0,
-    clientAppointmentRate: calculateRate(metrics.clientAppointment, 3),
-    npsRate: calculateRate(metrics.nps, 100),
+    riskRate: Math.min(riskRate, 100),
+    qualityRate: Math.min(qualityRate, 100),
+    complaintRate: Math.min(complaintRate, 100),
+    clientAppointmentRate: Math.min(clientAppointmentRate, 100),
+    npsRate: Math.min(npsRate, 100),
   };
 }
 

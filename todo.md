@@ -49,3 +49,8 @@
 - [ ] 準備 iOS 應用程式編譯配置
 - [ ] 生成 iOS 應用程式用於 TestFlight 分發
 - [ ] 生成 APK 檔案用於 Android 分發
+
+## 功能修整
+- [x] 修改 Wealth Penetration 和 NNM 計算邏輯，超過 200% 時使用 200%（而非只顯示 CAP）
+- [x] 修改非財務指標計算邏輯，超過 100% 時使用 100%（而非只顯示 CAP）
+- [x] 刪除歷史紀錄中的 PDF 和 Excel 匯出按鈕

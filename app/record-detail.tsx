@@ -8,7 +8,7 @@ import { ThemedView } from "@/components/themed-view";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { getRecord, deleteRecord, type CalculationRecord } from "@/lib/storage";
 import { POSITIONS } from "@/constants/positions";
-import { exportToPDF, exportToExcel, type ExportRecord } from "@/lib/export";
+
 
 export default function RecordDetailScreen() {
   const router = useRouter();
@@ -247,56 +247,6 @@ export default function RecordDetailScreen() {
         </View>
       </ThemedView>
 
-      {/* 匯出按鈕 */}
-      <View style={styles.buttonContainer}>
-        <Pressable
-          onPress={() => {
-            const exportData: ExportRecord = {
-              position: record.position,
-              recognitionRatio: record.recognitionRatio,
-              financialMetrics: record.financialMetrics,
-              nonFinancialMetrics: record.nonFinancialMetrics,
-              financialScore: record.financialScore,
-              nonFinancialScore: record.nonFinancialScore,
-              finalBonus: record.finalBonus,
-              penalties: record.penalties,
-              createdAt: formatDate(record.timestamp),
-            };
-            exportToExcel(exportData, `HSBC_${record.position}_${formatDate(record.timestamp).replace(/[/:]/g, "-")}`);
-          }}
-          style={({ pressed }) => [
-            styles.exportButton,
-            { backgroundColor: tintColor },
-            pressed && styles.buttonPressed,
-          ]}
-        >
-          <ThemedText style={styles.buttonText}>匯出 Excel</ThemedText>
-        </Pressable>
-        <Pressable
-          onPress={() => {
-            const exportData: ExportRecord = {
-              position: record.position,
-              recognitionRatio: record.recognitionRatio,
-              financialMetrics: record.financialMetrics,
-              nonFinancialMetrics: record.nonFinancialMetrics,
-              financialScore: record.financialScore,
-              nonFinancialScore: record.nonFinancialScore,
-              finalBonus: record.finalBonus,
-              penalties: record.penalties,
-              createdAt: formatDate(record.timestamp),
-            };
-            exportToPDF(exportData, `HSBC_${record.position}_${formatDate(record.timestamp).replace(/[/:]/g, "-")}`);
-          }}
-          style={({ pressed }) => [
-            styles.exportButton,
-            { backgroundColor: tintColor },
-            pressed && styles.buttonPressed,
-          ]}
-        >
-          <ThemedText style={styles.buttonText}>匯出 PDF</ThemedText>
-        </Pressable>
-      </View>
-
       {/* 刪除按鈕 */}
       <Pressable
         onPress={handleDelete}
@@ -410,19 +360,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
   },
-  buttonContainer: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 12,
-  },
-  exportButton: {
-    flex: 1,
-    borderRadius: 8,
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-  },
+
   deleteButton: {
     borderRadius: 8,
     padding: 16,
