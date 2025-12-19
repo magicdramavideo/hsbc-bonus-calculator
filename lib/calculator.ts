@@ -86,8 +86,8 @@ export function calculateFinancialRates(
     insuranceRate: calculateRate(metrics.insuranceIncome, targets.insuranceTarget),
     totalIncomeRate: calculateRate(totalIncome, targets.totalIncomeTarget),
     caRate: calculateRate(metrics.ca, targets.caTarget),
-    nnmRate: Math.min(nnmRate, 200),
-    wealthPenetrationRate: Math.min(wealthPenetrationRate, 200),
+    nnmRate: nnmRate,
+    wealthPenetrationRate: wealthPenetrationRate,
   };
 }
 
@@ -104,11 +104,11 @@ export function calculateNonFinancialRates(
   const npsRate = calculateRate(metrics.nps, 100);
 
   return {
-    riskRate: Math.min(riskRate, 100),
-    qualityRate: Math.min(qualityRate, 100),
-    complaintRate: Math.min(complaintRate, 100),
-    clientAppointmentRate: Math.min(clientAppointmentRate, 100),
-    npsRate: Math.min(npsRate, 100),
+    riskRate: riskRate,
+    qualityRate: qualityRate,
+    complaintRate: complaintRate,
+    clientAppointmentRate: clientAppointmentRate,
+    npsRate: npsRate,
   };
 }
 
@@ -176,8 +176,12 @@ export function calculateBonus(
 ): BonusResult {
   const penalties: string[] = [];
 
+  // 對超過上限的達成率進行限制
+  const cappedFinancialScore = Math.min(financialScore, 100);
+  const cappedNonFinancialScore = Math.min(nonFinancialScore, 100);
+
   // 1. 檢查財務與非財務指標是否皆達70%
-  if (financialScore < 70 || nonFinancialScore < 70) {
+  if (cappedFinancialScore < 70 || cappedNonFinancialScore < 70) {
     return {
       financialScore,
       nonFinancialScore,
@@ -188,7 +192,7 @@ export function calculateBonus(
   }
 
   // 計算基礎獎金
-  let baseBonus = qti * (financialScore / 100) * (nonFinancialScore / 100);
+  let baseBonus = qti * (cappedFinancialScore / 100) * (cappedNonFinancialScore / 100);
   let finalBonus = baseBonus;
 
   // 2. 檢查CA及NNM是否皆低於目標
