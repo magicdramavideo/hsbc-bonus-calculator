@@ -1,278 +1,248 @@
-import { Image } from "expo-image";
-import { useRouter, Link } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { HelloWave } from "@/components/hello-wave";
-import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { getLoginUrl } from "@/constants/oauth";
-import { useAuth } from "@/hooks/use-auth";
+import { POSITIONS, POSITION_KEYS, getQuarterlyTarget, getInvestmentTarget, getInsuranceTarget } from "@/constants/positions";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 export default function HomeScreen() {
-  const { user, loading, isAuthenticated, logout } = useAuth();
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [selectedPosition, setSelectedPosition] = useState<string>(POSITION_KEYS[0]);
+  const [recognitionRatio, setRecognitionRatio] = useState<string>("100");
 
-  useEffect(() => {
-    console.log("[HomeScreen] Auth state:", {
-      hasUser: !!user,
-      loading,
-      isAuthenticated,
-      user: user ? { id: user.id, openId: user.openId, name: user.name, email: user.email } : null,
+  const cardBg = useThemeColor({}, "card");
+  const borderColor = useThemeColor({}, "border");
+  const tintColor = useThemeColor({}, "tint");
+  const textColor = useThemeColor({}, "text");
+
+  const position = POSITIONS[selectedPosition];
+  const ratio = parseFloat(recognitionRatio) || 100;
+  const adjustedRatio = Math.min(Math.max(ratio, 0), 100) / 100;
+
+  // 計算折扣後的目標
+  const adjustedMonthlyTarget = Math.round(position.monthlyTarget * adjustedRatio);
+  const adjustedQTI = Math.round(position.qti * adjustedRatio);
+  const adjustedQuarterlyTarget = getQuarterlyTarget(adjustedMonthlyTarget);
+  const adjustedInvestmentTarget = getInvestmentTarget(adjustedMonthlyTarget);
+  const adjustedInsuranceTarget = getInsuranceTarget(adjustedMonthlyTarget);
+  const adjustedNNM = Math.round(position.nnm * adjustedRatio);
+  const adjustedCA = Math.round(position.ca * adjustedRatio * 3); // CA季目標
+
+  const handleStartCalculation = () => {
+    router.push({
+      pathname: "/calculator",
+      params: {
+        position: selectedPosition,
+        recognitionRatio: ratio.toString(),
+      },
     });
-  }, [user, loading, isAuthenticated]);
-
-  const handleLogin = async () => {
-    try {
-      console.log("[Auth] Login button clicked");
-      setIsLoggingIn(true);
-      const loginUrl = getLoginUrl();
-      console.log("[Auth] Generated login URL:", loginUrl);
-
-      // On web, use direct redirect in same tab
-      // On mobile, use WebBrowser to open OAuth in a separate context
-      if (Platform.OS === "web") {
-        console.log("[Auth] Web platform: redirecting to OAuth in same tab...");
-        window.location.href = loginUrl;
-        return;
-      }
-
-      // Mobile: Open OAuth URL in browser
-      // The OAuth server will redirect to our deep link (manusapp://oauth/callback?code=...&state=...)
-      console.log("[Auth] Opening OAuth URL in browser...");
-      const result = await WebBrowser.openAuthSessionAsync(
-        loginUrl,
-        undefined, // Deep link is already configured in getLoginUrl, so no need to specify here
-        {
-          preferEphemeralSession: false,
-          showInRecents: true,
-        },
-      );
-
-      console.log("[Auth] WebBrowser result:", result);
-      if (result.type === "cancel") {
-        console.log("[Auth] OAuth cancelled by user");
-      } else if (result.type === "dismiss") {
-        console.log("[Auth] OAuth dismissed");
-      } else if (result.type === "success" && result.url) {
-        console.log("[Auth] OAuth session successful, navigating to callback:", result.url);
-        // Extract code and state from the URL
-        try {
-          // Parse the URL - it might be exp:// or a regular URL
-          let url: URL;
-          if (result.url.startsWith("exp://") || result.url.startsWith("exps://")) {
-            // For exp:// URLs, we need to parse them differently
-            // Format: exp://192.168.31.156:8081/--/oauth/callback?code=...&state=...
-            const urlStr = result.url.replace(/^exp(s)?:\/\//, "http://");
-            url = new URL(urlStr);
-          } else {
-            url = new URL(result.url);
-          }
-
-          const code = url.searchParams.get("code");
-          const state = url.searchParams.get("state");
-          const error = url.searchParams.get("error");
-
-          console.log("[Auth] Extracted params from callback URL:", {
-            code: code?.substring(0, 20) + "...",
-            state: state?.substring(0, 20) + "...",
-            error,
-          });
-
-          if (error) {
-            console.error("[Auth] OAuth error in callback:", error);
-            return;
-          }
-
-          if (code && state) {
-            // Navigate to callback route with params
-            console.log("[Auth] Navigating to callback route with params...");
-            router.push({
-              pathname: "/oauth/callback" as any,
-              params: { code, state },
-            });
-          } else {
-            console.error("[Auth] Missing code or state in callback URL");
-          }
-        } catch (err) {
-          console.error("[Auth] Failed to parse callback URL:", err, result.url);
-          // Fallback: try parsing with regex
-          const codeMatch = result.url.match(/[?&]code=([^&]+)/);
-          const stateMatch = result.url.match(/[?&]state=([^&]+)/);
-
-          if (codeMatch && stateMatch) {
-            const code = decodeURIComponent(codeMatch[1]);
-            const state = decodeURIComponent(stateMatch[1]);
-            console.log("[Auth] Fallback: extracted params via regex, navigating...");
-            router.push({
-              pathname: "/oauth/callback" as any,
-              params: { code, state },
-            });
-          } else {
-            console.error("[Auth] Could not extract code/state from URL");
-          }
-        }
-      }
-    } catch (error) {
-      console.error("[Auth] Login error:", error);
-    } finally {
-      setIsLoggingIn(false);
-    }
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[
+        styles.contentContainer,
+        {
+          paddingTop: Math.max(insets.top, 16),
+          paddingBottom: Math.max(insets.bottom, 16),
+        },
+      ]}
     >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.authContainer}>
-        {loading ? (
-          <ActivityIndicator />
-        ) : isAuthenticated && user ? (
-          <ThemedView style={styles.userInfo}>
-            <ThemedText type="subtitle">Logged in as</ThemedText>
-            <ThemedText type="defaultSemiBold">{user.name || user.email || user.openId}</ThemedText>
-            <Pressable onPress={logout} style={styles.logoutButton}>
-              <ThemedText style={styles.logoutText}>Logout</ThemedText>
-            </Pressable>
-          </ThemedView>
-        ) : (
-          <Pressable
-            onPress={handleLogin}
-            disabled={isLoggingIn}
-            style={[styles.loginButton, isLoggingIn && styles.loginButtonDisabled]}
-          >
-            {isLoggingIn ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <ThemedText style={styles.loginText}>Login</ThemedText>
-            )}
-          </Pressable>
-        )}
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
-          </ThemedText>{" "}
-          to open developer tools.
+      <ThemedView style={styles.header}>
+        <ThemedText type="title" style={styles.title}>
+          HSBC 2026
+        </ThemedText>
+        <ThemedText type="subtitle" style={styles.subtitle}>
+          理專獎金計算系統
         </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert("Action pressed")} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert("Share pressed")}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert("Delete pressed")}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
+      {/* 職級選擇 */}
+      <ThemedView style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+        <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
+          選擇職級
         </ThemedText>
+        <View style={[styles.pickerContainer, { borderColor, backgroundColor: cardBg }]}>
+          <Picker
+            selectedValue={selectedPosition}
+            onValueChange={(value) => setSelectedPosition(value)}
+            style={[styles.picker, { color: textColor }]}
+          >
+            {POSITION_KEYS.map((key) => (
+              <Picker.Item key={key} label={POSITIONS[key].name} value={key} />
+            ))}
+          </Picker>
+        </View>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
+
+      {/* 認列比例 */}
+      <ThemedView style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+        <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
+          認列比例（%）
         </ThemedText>
+        <TextInput
+          style={[styles.input, { borderColor, color: textColor, backgroundColor: cardBg }]}
+          value={recognitionRatio}
+          onChangeText={setRecognitionRatio}
+          keyboardType="numeric"
+          placeholder="100"
+          placeholderTextColor="#999"
+        />
+        <ThemedText style={styles.hint}>請輸入 0-100 之間的數值</ThemedText>
       </ThemedView>
-    </ParallaxScrollView>
+
+      {/* 目標資訊 */}
+      <ThemedView style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+        <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
+          目標資訊
+        </ThemedText>
+        <View style={styles.infoRow}>
+          <ThemedText style={styles.infoLabel}>月目標：</ThemedText>
+          <ThemedText style={styles.infoValue}>
+            ${adjustedMonthlyTarget.toLocaleString()}
+          </ThemedText>
+        </View>
+        <View style={styles.infoRow}>
+          <ThemedText style={styles.infoLabel}>季目標：</ThemedText>
+          <ThemedText style={styles.infoValue}>
+            ${adjustedQuarterlyTarget.toLocaleString()}
+          </ThemedText>
+        </View>
+        <View style={styles.infoRow}>
+          <ThemedText style={styles.infoLabel}>QTI：</ThemedText>
+          <ThemedText style={styles.infoValue}>${adjustedQTI.toLocaleString()}</ThemedText>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.infoRow}>
+          <ThemedText style={styles.infoLabel}>投資手收季目標：</ThemedText>
+          <ThemedText style={styles.infoValue}>
+            ${(adjustedInvestmentTarget * 3).toLocaleString()}
+          </ThemedText>
+        </View>
+        <View style={styles.infoRow}>
+          <ThemedText style={styles.infoLabel}>保險手收季目標：</ThemedText>
+          <ThemedText style={styles.infoValue}>
+            ${(adjustedInsuranceTarget * 3).toLocaleString()}
+          </ThemedText>
+        </View>
+        <View style={styles.infoRow}>
+          <ThemedText style={styles.infoLabel}>CA 季目標：</ThemedText>
+          <ThemedText style={styles.infoValue}>{adjustedCA}</ThemedText>
+        </View>
+        <View style={styles.infoRow}>
+          <ThemedText style={styles.infoLabel}>NNM 季目標：</ThemedText>
+          <ThemedText style={styles.infoValue}>${adjustedNNM.toLocaleString()}</ThemedText>
+        </View>
+        <View style={styles.infoRow}>
+          <ThemedText style={styles.infoLabel}>Wealth Penetration 季目標：</ThemedText>
+          <ThemedText style={styles.infoValue}>{position.wealthPenetration * 3}</ThemedText>
+        </View>
+      </ThemedView>
+
+      {/* 開始計算按鈕 */}
+      <Pressable
+        onPress={handleStartCalculation}
+        style={({ pressed }) => [
+          styles.button,
+          { backgroundColor: tintColor },
+          pressed && styles.buttonPressed,
+        ]}
+      >
+        <ThemedText style={styles.buttonText}>開始計算獎金</ThemedText>
+      </Pressable>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  container: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
+  contentContainer: {
+    padding: 16,
+    gap: 16,
+  },
+  header: {
+    alignItems: "center",
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    lineHeight: 36,
   },
-  authContainer: {
-    marginBottom: 16,
+  subtitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    marginTop: 4,
+  },
+  card: {
+    borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+  },
+  cardTitle: {
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  pickerContainer: {
+    borderWidth: 1,
     borderRadius: 8,
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    overflow: "hidden",
   },
-  userInfo: {
-    gap: 8,
-    alignItems: "center",
+  picker: {
+    height: 50,
   },
-  loginButton: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+  input: {
+    borderWidth: 1,
     borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
+    padding: 12,
+    fontSize: 16,
+    height: 50,
   },
-  loginButtonDisabled: {
+  hint: {
+    fontSize: 12,
+    marginTop: 8,
     opacity: 0.6,
   },
-  loginText: {
-    color: "#fff",
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  infoLabel: {
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  infoValue: {
     fontSize: 16,
     fontWeight: "600",
   },
-  logoutButton: {
-    marginTop: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    backgroundColor: "rgba(255, 59, 48, 0.1)",
+  divider: {
+    height: 1,
+    backgroundColor: "#E0E0E0",
+    marginVertical: 8,
   },
-  logoutText: {
-    color: "#FF3B30",
-    fontSize: 14,
-    fontWeight: "500",
+  button: {
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 50,
+  },
+  buttonPressed: {
+    opacity: 0.8,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "600",
   },
 });

@@ -5,25 +5,35 @@
 
 import { Platform } from "react-native";
 
-const tintColorLight = "#0a7ea4";
-const tintColorDark = "#fff";
+const tintColorLight = "#DB0011"; // HSBC Red
+const tintColorDark = "#DB0011"; // HSBC Red
 
 export const Colors = {
   light: {
-    text: "#11181C",
-    background: "#fff",
+    text: "#333333",
+    background: "#F5F5F5",
     tint: tintColorLight,
-    icon: "#687076",
-    tabIconDefault: "#687076",
+    icon: "#666666",
+    tabIconDefault: "#999999",
     tabIconSelected: tintColorLight,
+    card: "#FFFFFF",
+    border: "#E0E0E0",
+    success: "#34C759",
+    warning: "#FF9500",
+    error: "#FF3B30",
   },
   dark: {
     text: "#ECEDEE",
-    background: "#151718",
+    background: "#1C1C1E",
     tint: tintColorDark,
     icon: "#9BA1A6",
     tabIconDefault: "#9BA1A6",
     tabIconSelected: tintColorDark,
+    card: "#2C2C2E",
+    border: "#38383A",
+    success: "#34C759",
+    warning: "#FF9500",
+    error: "#FF3B30",
   },
 };
 
