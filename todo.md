@@ -33,6 +33,19 @@
 ## Bug 修複
 - [x] 修複 useLinkPreviewContext 錯誤（需要在 LinkPreviewContextProvider 內部使用）
 
-## 那輯修正
+## 邏輯修正
 - [x] 修正 NNM 季目標計算（月目標 * 3）
 - [x] 修正 NPS 權重計算（NPS=100 時 25%，NPS<100 時 20%）
+
+## 新增功能需求
+- [x] Wealth Penetration 及 NNM 百分比上限設置為 200%（超過時變色並顯示 CAP）
+- [x] NPS 輸入值上限設置為 100
+- [x] 非財務指標其他項目百分比上限設置為 100%（超過時變色並顯示 CAP）
+- [x] 獎金旁邊顯示提撥比（獎金/總手收，百分比格式，小數點後兩位）
+- [x] 歷史紀錄新增匯出功能（PDF、圖片、Excel）
+
+## 部署與分發
+- [x] 建立 Web 版本公開連結
+- [ ] 準備 iOS 應用程式編譯配置
+- [ ] 生成 iOS 應用程式用於 TestFlight 分發
+- [ ] 生成 APK 檔案用於 Android 分發

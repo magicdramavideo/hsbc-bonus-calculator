@@ -58,6 +58,16 @@ export function calculateRate(actual: number, target: number): number {
 }
 
 /**
+ * 檢查達成率是否超過上限
+ */
+export function checkRateCap(rate: number, cap: number): { isCapped: boolean; displayRate: number } {
+  if (rate > cap) {
+    return { isCapped: true, displayRate: cap };
+  }
+  return { isCapped: false, displayRate: rate };
+}
+
+/**
  * 計算財務指標達成率
  */
 export function calculateFinancialRates(
