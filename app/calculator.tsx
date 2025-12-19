@@ -109,9 +109,16 @@ export default function CalculatorScreen() {
 
   const getRateDisplay = (rate: number, cap?: number) => {
     if (cap && rate > cap) {
-      return `CAP=${cap}%`;
+      return `${cap}% 超過Cap`;
     }
     return `${Math.min(rate, cap || rate).toFixed(2)}%`;
+  };
+
+  const getRateDisplayColor = (rate: number, cap?: number) => {
+    if (cap && rate > cap) {
+      return errorColor;
+    }
+    return getRateColor(rate, cap);
   };
 
   const handleSave = async () => {
@@ -264,7 +271,7 @@ export default function CalculatorScreen() {
               / {targets.nnmTarget.toLocaleString()}
             </ThemedText>
             <ThemedText
-              style={[styles.rateText, { color: getRateColor(financialRates.nnmRate || 0, 200) }]}
+              style={[styles.rateText, { color: getRateDisplayColor(financialRates.nnmRate || 0, 200) }]}
             >
               {getRateDisplay(financialRates.nnmRate || 0, 200)}
             </ThemedText>
@@ -288,7 +295,7 @@ export default function CalculatorScreen() {
             <ThemedText
               style={[
                 styles.rateText,
-                { color: getRateColor(financialRates.wealthPenetrationRate || 0, 200) },
+                { color: getRateDisplayColor(financialRates.wealthPenetrationRate || 0, 200) },
               ]}
             >
               {getRateDisplay(financialRates.wealthPenetrationRate || 0, 200)}
@@ -323,7 +330,7 @@ export default function CalculatorScreen() {
             />
             <ThemedText style={styles.targetText}>/ 0</ThemedText>
             <ThemedText
-              style={[styles.rateText, { color: getRateColor(nonFinancialRates.riskRate || 0, 100) }]}
+              style={[styles.rateText, { color: getRateDisplayColor(nonFinancialRates.riskRate || 0, 100) }]}
             >
               {getRateDisplay(nonFinancialRates.riskRate || 0, 100)}
             </ThemedText>
@@ -343,7 +350,7 @@ export default function CalculatorScreen() {
             />
             <ThemedText style={styles.targetText}>/ 0</ThemedText>
             <ThemedText
-              style={[styles.rateText, { color: getRateColor(nonFinancialRates.qualityRate || 0, 100) }]}
+              style={[styles.rateText, { color: getRateDisplayColor(nonFinancialRates.qualityRate || 0, 100) }]}
             >
               {getRateDisplay(nonFinancialRates.qualityRate || 0, 100)}
             </ThemedText>
@@ -365,7 +372,7 @@ export default function CalculatorScreen() {
             <ThemedText
               style={[
                 styles.rateText,
-                { color: getRateColor(nonFinancialRates.complaintRate || 0, 100) },
+                { color: getRateDisplayColor(nonFinancialRates.complaintRate || 0, 100) },
               ]}
             >
               {getRateDisplay(nonFinancialRates.complaintRate || 0, 100)}
@@ -388,7 +395,7 @@ export default function CalculatorScreen() {
             <ThemedText
               style={[
                 styles.rateText,
-                { color: getRateColor(nonFinancialRates.clientAppointmentRate || 0, 100) },
+                { color: getRateDisplayColor(nonFinancialRates.clientAppointmentRate || 0, 100) },
               ]}
             >
               {getRateDisplay(nonFinancialRates.clientAppointmentRate || 0, 100)}
@@ -413,9 +420,9 @@ export default function CalculatorScreen() {
             />
             <ThemedText style={styles.targetText}>/ 100</ThemedText>
             <ThemedText
-              style={[styles.rateText, { color: getRateColor(nonFinancialRates.npsRate || 0, undefined) }]}
+              style={[styles.rateText, { color: getRateDisplayColor(nonFinancialRates.npsRate || 0, 100) }]}
             >
-              {(nonFinancialRates.npsRate || 0).toFixed(2)}%
+              {getRateDisplay(nonFinancialRates.npsRate || 0, 100)}
             </ThemedText>
           </View>
         </View>
