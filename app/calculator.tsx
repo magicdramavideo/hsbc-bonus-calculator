@@ -37,7 +37,7 @@ export default function CalculatorScreen() {
     insuranceTarget: getInsuranceTarget(adjustedMonthlyTarget) * 3,
     totalIncomeTarget: getQuarterlyTarget(adjustedMonthlyTarget),
     caTarget: Math.round(positionData.ca * adjustedRatio * 3),
-    nnmTarget: Math.round(positionData.nnm * adjustedRatio),
+    nnmTarget: Math.round(positionData.nnm * adjustedRatio * 3),
     wealthPenetrationTarget: positionData.wealthPenetration * 3,
   };
 

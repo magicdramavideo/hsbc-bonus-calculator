@@ -32,3 +32,7 @@
 
 ## Bug 修複
 - [x] 修複 useLinkPreviewContext 錯誤（需要在 LinkPreviewContextProvider 內部使用）
+
+## 那輯修正
+- [x] 修正 NNM 季目標計算（月目標 * 3）
+- [x] 修正 NPS 權重計算（NPS=100 時 25%，NPS<100 時 20%）

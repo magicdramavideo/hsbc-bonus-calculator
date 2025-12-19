@@ -30,7 +30,7 @@ export default function HomeScreen() {
   const adjustedQuarterlyTarget = getQuarterlyTarget(adjustedMonthlyTarget);
   const adjustedInvestmentTarget = getInvestmentTarget(adjustedMonthlyTarget);
   const adjustedInsuranceTarget = getInsuranceTarget(adjustedMonthlyTarget);
-  const adjustedNNM = Math.round(position.nnm * adjustedRatio);
+  const adjustedNNM = Math.round(position.nnm * adjustedRatio * 3); // NNM季目標
   const adjustedCA = Math.round(position.ca * adjustedRatio * 3); // CA季目標
 
   const handleStartCalculation = () => {

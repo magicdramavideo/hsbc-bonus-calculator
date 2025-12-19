@@ -111,8 +111,8 @@ export function calculateFinancialScore(rates: Partial<AchievementRates>): numbe
 
 /**
  * 計算非財務指標總分
- * 公式：Risk*20% + Quality*20% + Client Appointment*20% + NPS*20%
- * 特殊規則：若NPS為100，則該項目以25%計算，其餘分數皆以20%計算
+ * 公式：Risk*20% + Quality*20% + Client Appointment*20% + Complaint*20% + NPS*20%
+ * 特殊規則：若NPS為100，則NPS以25%計算，其他四項各佔20%；若NPS<100，則五項各佔20%
  */
 export function calculateNonFinancialScore(rates: Partial<AchievementRates>): number {
   const npsRate = rates.npsRate || 0;
@@ -121,21 +121,21 @@ export function calculateNonFinancialScore(rates: Partial<AchievementRates>): nu
   let score: number;
 
   if (isNpsPerfect) {
-    // NPS為100時，NPS佔25%，其他各佔20%
+    // NPS為100時，NPS佔25%，其他四項各佔20%
     score =
       (rates.riskRate || 0) * 0.2 +
       (rates.qualityRate || 0) * 0.2 +
       (rates.clientAppointmentRate || 0) * 0.2 +
-      npsRate * 0.25 +
-      (rates.complaintRate || 0) * 0.15; // Complaint 補足剩餘15%
+      (rates.complaintRate || 0) * 0.2 +
+      npsRate * 0.25;
   } else {
-    // NPS未達100時，各項皆佔20%
+    // NPS未達100時，五項各佔20%
     score =
       (rates.riskRate || 0) * 0.2 +
       (rates.qualityRate || 0) * 0.2 +
       (rates.clientAppointmentRate || 0) * 0.2 +
-      npsRate * 0.2 +
-      (rates.complaintRate || 0) * 0.2;
+      (rates.complaintRate || 0) * 0.2 +
+      npsRate * 0.2;
   }
 
   return Math.round(score * 100) / 100;
