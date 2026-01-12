@@ -114,15 +114,15 @@ export function calculateNonFinancialRates(
 
 /**
  * 計算財務指標總分
- * 公式：投資手收*25% + 保險手收*25% + CA*20% + NNM*20% + Wealth Penetration*10%
+ * 公式：投資手收*25% + 保險手收*25% + CA*20% + NNM*10% + Wealth Penetration*20%
  */
 export function calculateFinancialScore(rates: Partial<AchievementRates>): number {
   const score =
     (rates.investmentRate || 0) * 0.25 +
     (rates.insuranceRate || 0) * 0.25 +
     (rates.caRate || 0) * 0.2 +
-    (rates.nnmRate || 0) * 0.2 +
-    (rates.wealthPenetrationRate || 0) * 0.1;
+    (rates.nnmRate || 0) * 0.1 +
+    (rates.wealthPenetrationRate || 0) * 0.2;
 
   return Math.round(score * 100) / 100;
 }
